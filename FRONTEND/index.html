@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TeamFinder — Find Your Dream Team</title>
+  <meta name="description" content="TeamFinder connects ambitious builders with the right teammates. Discover projects, join teams, and ship together." />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>" />
+  <style>
+    /* ── Landing-specific styles ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: calc(var(--nav-height) + 40px) var(--space-5) var(--space-9);
+      position: relative;
+      overflow: hidden;
+      background: var(--gradient-hero);
+    }
+
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,122,24,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,122,24,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: rgba(255,122,24,0.09);
+      border: 1px solid rgba(255,122,24,0.28);
+      border-radius: var(--radius-pill);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent-1);
+      margin-bottom: var(--space-5);
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .hero-badge-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent-1);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .hero-content { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; }
+
+    .hero-title {
+      font-size: clamp(2.5rem, 7vw, 5.5rem);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1.0;
+      margin-bottom: var(--space-5);
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      color: var(--text-secondary);
+      max-width: 560px;
+      margin: 0 auto var(--space-6);
+      line-height: 1.7;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-7);
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+
+    .hero-stats {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-7);
+      animation: fadeUp 0.6s 0.4s ease both;
+      flex-wrap: wrap;
+    }
+
+    .hero-stat {
+      text-align: center;
+    }
+
+    .hero-stat-num {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: var(--gradient-brand);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .hero-divider {
+      width: 1px; height: 36px;
+      background: var(--border);
+    }
+
+    /* Features */
+    .features {
+      padding: var(--space-9) 0;
+      position: relative;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-5);
+      margin-top: var(--space-7);
+    }
+
+    .feature-card {
+      padding: var(--space-6);
+    }
+
+    .feature-icon {
+      width: 52px; height: 52px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: var(--space-4);
+      background: rgba(255,122,24,0.09);
+      border: 1px solid rgba(255,122,24,0.18);
+    }
+
+    .feature-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: var(--space-2);
+      letter-spacing: -0.02em;
+    }
+
+    .feature-text {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    /* How it works */
+    .how-it-works {
+      padding: var(--space-9) 0;
+      background: rgba(255,255,255,0.012);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-5);
+      margin-top: var(--space-7);
+      position: relative;
+    }
+
+    .steps-grid::before {
+      content: '';
+      position: absolute;
+      top: 28px;
+      left: calc(16.7% + 24px);
+      right: calc(16.7% + 24px);
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border-accent), transparent);
+    }
+
+    .step {
+      text-align: center;
+      padding: var(--space-5);
+    }
+
+    .step-num {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: var(--gradient-card);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      font-weight: 800;
+      margin: 0 auto var(--space-4);
+      position: relative;
+      color: var(--accent-1);
+    }
+
+    .step-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: var(--space-2);
+    }
+
+    .step-text {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    /* CTA Section */
+    .cta-section {
+      padding: var(--space-9) 0;
+      text-align: center;
+    }
+
+    .cta-card {
+      background: linear-gradient(135deg, rgba(255,122,24,0.09) 0%, rgba(255,61,0,0.05) 100%);
+      border: 1px solid rgba(255,122,24,0.18);
+      border-radius: var(--radius-xl);
+      padding: var(--space-9) var(--space-5);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: var(--gradient-brand);
+    }
+
+    .cta-title {
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      margin-bottom: var(--space-4);
+    }
+
+    .cta-sub {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-6);
+    }
+
+    /* Footer */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: var(--space-6) 0;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 768px) {
+      .features-grid,
+      .steps-grid { grid-template-columns: 1fr; }
+      .steps-grid::before { display: none; }
+      .hero-divider { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Decorative orbs -->
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<!-- Navbar -->
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon">🚀</div>
+      <span class="nav-logo-text"><span class="logo-white">Team</span><span class="logo-orange">Finder</span></span>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="find-team.html" class="nav-link" data-page="find-team.html">🔍 Find Teams</a></li>
+      <li><a href="create-project.html" class="nav-link" data-page="create-project.html" data-auth="true" style="display:none;">➕ Create Project</a></li>
+      <li><a href="dashboard.html" class="nav-link" data-page="dashboard.html" data-auth="true" style="display:none;">📊 Dashboard</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      <a href="login.html" class="btn btn-ghost btn-sm" data-auth="false" id="nav-login-btn">Log In</a>
+      <a href="login.html" class="btn btn-cta btn-sm" data-auth="false" id="nav-signup-btn">Get Started →</a>
+      <div data-auth="true" style="display:none;display:flex;align-items:center;gap:10px;">
+        <a href="dashboard.html" class="btn btn-secondary btn-sm">Dashboard</a>
+        <div class="avatar nav-user-avatar" style="cursor:pointer;" id="nav-avatar-btn">??</div>
+      </div>
+    </div>
+
+    <button class="nav-hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile nav -->
+<div class="nav-mobile" id="mobile-menu">
+  <a href="find-team.html" class="nav-link">🔍 Find Teams</a>
+  <a href="create-project.html" class="nav-link" data-auth="true" style="display:none;">➕ Create Project</a>
+  <a href="dashboard.html" class="nav-link" data-auth="true" style="display:none;">📊 Dashboard</a>
+  <a href="login.html" class="nav-link" data-auth="false">🔑 Log In</a>
+  <a href="login.html" class="btn btn-cta btn-sm" data-auth="false" style="margin-top:8px;">Get Started</a>
+</div>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      Now in Beta — Join 2,000+ builders
+    </div>
+    <h1 class="hero-title">
+      Find Your<br />
+      <span class="gradient-text">Dream Team.</span>
+    </h1>
+    <p class="hero-subtitle">
+      TeamFinder connects ambitious builders, designers, and creators with the right
+      teammates. Discover exciting projects, join teams, and ship together.
+    </p>
+    <div class="hero-actions">
+      <a href="login.html" class="btn btn-cta btn-lg" id="hero-get-started">
+        Get Started Free →
+      </a>
+      <a href="find-team.html" class="btn btn-secondary btn-lg">
+        Browse Projects
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-num">2K+</div>
+        <div class="hero-stat-label">Active Builders</div>
+      </div>
+      <div class="hero-divider"></div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">150+</div>
+        <div class="hero-stat-label">Live Projects</div>
+      </div>
+      <div class="hero-divider"></div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">95%</div>
+        <div class="hero-stat-label">Match Success</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Built for builders</span>
+      <h2 class="section-title">Everything you need to <span class="gradient-text">build together</span></h2>
+      <p class="section-subtitle">From discovery to launch — TeamFinder powers every stage of collaborative development.</p>
+    </div>
+    <div class="features-grid">
+      <div class="card feature-card animate-fade-up-delay-1">
+        <div class="feature-icon">🎯</div>
+        <h3 class="feature-title">Smart Matching</h3>
+        <p class="feature-text">Our algorithm matches you with projects based on your skills, availability, and interests — no more scrolling through irrelevant listings.</p>
+      </div>
+      <div class="card feature-card animate-fade-up-delay-2">
+        <div class="feature-icon">🤝</div>
+        <h3 class="feature-title">Team Discovery</h3>
+        <p class="feature-text">Browse hundreds of active projects across AI, Web3, SaaS, and more. Filter by stack, duration, and remote options.</p>
+      </div>
+      <div class="card feature-card animate-fade-up-delay-3">
+        <div class="feature-icon">🛠</div>
+        <h3 class="feature-title">Project Management</h3>
+        <p class="feature-text">Create and manage your project listings, track applicants, and fill your team with the exact skill set you need.</p>
+      </div>
+      <div class="card feature-card animate-fade-up-delay-1">
+        <div class="feature-icon">💬</div>
+        <h3 class="feature-title">Direct Connect</h3>
+        <p class="feature-text">Skip the middleman. Request to join, get accepted, and start collaborating immediately through your preferred tools.</p>
+      </div>
+      <div class="card feature-card animate-fade-up-delay-2">
+        <div class="feature-icon">🌍</div>
+        <h3 class="feature-title">Remote First</h3>
+        <p class="feature-text">Work from anywhere. All projects support async collaboration, with timezone-friendly teams across 60+ countries.</p>
+      </div>
+      <div class="card feature-card animate-fade-up-delay-3">
+        <div class="feature-icon">⚡</div>
+        <h3 class="feature-title">Launch Fast</h3>
+        <p class="feature-text">Get from idea to team in hours, not weeks. Our streamlined process means you can start building the next day.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section class="how-it-works">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">How it works</span>
+      <h2 class="section-title">Three steps to your <span class="gradient-text">dream team</span></h2>
+    </div>
+    <div class="steps-grid">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3 class="step-title">Create Your Profile</h3>
+        <p class="step-text">Sign up and tell us your skills, experience, and the kind of projects you're excited to work on.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3 class="step-title">Browse & Discover</h3>
+        <p class="step-text">Explore curated projects and teams that match your interests. Filter by category, tech stack, and availability.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3 class="step-title">Join & Ship</h3>
+        <p class="step-text">Request to join, get accepted, and start collaborating immediately. Launch something amazing together.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-card">
+      <h2 class="cta-title">Ready to build something <span class="gradient-text">extraordinary?</span></h2>
+      <p class="cta-sub">Join thousands of developers who found their best teammates on TeamFinder.</p>
+      <div style="display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;">
+        <a href="login.html" class="btn btn-cta btn-lg">Start Building Free →</a>
+        <a href="find-team.html" class="btn btn-secondary btn-lg">Explore Projects</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <p>© 2024 TeamFinder. Built with ❤️ for builders everywhere.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+<script>
+  // Redirect logged-in users' "Get Started" to dashboard
+  document.getElementById('hero-get-started').addEventListener('click', (e) => {
+    if (auth.isLoggedIn()) {
+      e.preventDefault();
+      window.location.href = PAGES.dash;
+    }
+  });
+
+  document.getElementById('nav-login-btn')?.addEventListener('click', () => {});
+  document.getElementById('nav-signup-btn')?.addEventListener('click', () => {});
+
+  document.getElementById('nav-avatar-btn')?.addEventListener('click', () => {
+    window.location.href = PAGES.dash;
+  });
+</script>
+</body>
+</html>

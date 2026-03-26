@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Find a Team — TeamFinder</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>" />
+  <style>
+    .find-hero {
+      padding: calc(var(--nav-height) + var(--space-7)) 0 var(--space-7);
+      text-align: center;
+      background: linear-gradient(160deg, #050505 0%, var(--bg-base) 100%);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .find-title {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      margin-bottom: var(--space-3);
+    }
+
+    .find-sub {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-6);
+    }
+
+    /* Search Bar */
+    .search-wrap {
+      max-width: 640px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    #search-input {
+      width: 100%;
+      padding: 16px 20px 16px 50px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      color: var(--text-primary);
+      font-size: 1rem;
+      outline: none;
+      transition: all var(--transition);
+    }
+
+    #search-input:focus {
+      border-color: var(--accent-1);
+      background: rgba(255,122,24,0.05);
+      box-shadow: 0 0 0 4px rgba(255,122,24,0.1), var(--shadow-md);
+    }
+
+    #search-input::placeholder { color: var(--text-muted); }
+
+    /* Filters */
+    .filters-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+      padding: var(--space-5) 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .filter-btn {
+      padding: 6px 16px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .filter-btn:hover {
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+    }
+
+    .filter-btn.active {
+      background: rgba(255,122,24,0.1);
+      border-color: rgba(255,122,24,0.4);
+      color: var(--accent-1);
+    }
+
+    /* Results summary */
+    .results-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-5);
+      flex-wrap: wrap;
+      gap: var(--space-3);
+    }
+
+    .results-count {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .results-count strong {
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+
+    .sort-select {
+      padding: 6px 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .sort-select:focus { border-color: var(--accent-1); }
+
+    .find-content { padding: var(--space-7) 0; }
+  </style>
+</head>
+<body>
+
+<div class="orb orb-1" style="opacity:0.5;"></div>
+<div class="orb orb-2" style="opacity:0.4;"></div>
+
+<!-- Navbar -->
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon">🚀</div>
+      <span class="nav-logo-text"><span class="logo-white">Team</span><span class="logo-orange">Finder</span></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="find-team.html" class="nav-link active" data-page="find-team.html">🔍 Find Teams</a></li>
+      <li><a href="create-project.html" class="nav-link" data-page="create-project.html" data-auth="true" style="display:none;">➕ Create Project</a></li>
+      <li><a href="dashboard.html" class="nav-link" data-page="dashboard.html" data-auth="true" style="display:none;">📊 Dashboard</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="login.html" class="btn btn-ghost btn-sm" data-auth="false">Log In</a>
+      <a href="login.html" class="btn btn-primary btn-sm" data-auth="false">Get Started</a>
+      <div data-auth="true" style="display:flex;align-items:center;gap:10px;">
+        <a href="dashboard.html" class="btn btn-secondary btn-sm">Dashboard</a>
+        <div class="avatar nav-user-avatar">?</div>
+      </div>
+    </div>
+    <button class="nav-hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<div class="nav-mobile" id="mobile-menu">
+  <a href="find-team.html" class="nav-link active">🔍 Find Teams</a>
+  <a href="create-project.html" class="nav-link" data-auth="true" style="display:none;">➕ Create Project</a>
+  <a href="dashboard.html" class="nav-link" data-auth="true" style="display:none;">📊 Dashboard</a>
+  <a href="login.html" class="nav-link" data-auth="false">Log In</a>
+</div>
+
+<!-- Hero / Search -->
+<div class="find-hero">
+  <div class="container">
+    <span class="section-label">Discover</span>
+    <h1 class="find-title">Find Your Next <span class="gradient-text">Project</span></h1>
+    <p class="find-sub">Browse hundreds of exciting projects looking for talented teammates like you.</p>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-input" placeholder="Search projects by title, skill, or category..." autocomplete="off" />
+    </div>
+  </div>
+</div>
+
+<!-- Filters + Content -->
+<div class="find-content">
+  <div class="container">
+    <!-- Filters -->
+    <div class="filters-bar">
+      <span style="font-size:0.8rem;font-weight:600;color:var(--text-muted);">Filter:</span>
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="recruiting">🟢 Recruiting</button>
+      <button class="filter-btn" data-filter="ai">🤖 AI / ML</button>
+      <button class="filter-btn" data-filter="web3">⛓ Web3</button>
+      <button class="filter-btn" data-filter="saas">☁ SaaS</button>
+      <button class="filter-btn" data-filter="tools">🛠 Dev Tools</button>
+      <button class="filter-btn" data-filter="remote">🌍 Remote</button>
+    </div>
+
+    <!-- Results -->
+    <div class="results-info" style="margin-top:var(--space-5);">
+      <div class="results-count">Showing <strong id="result-count">0</strong> projects</div>
+      <select class="sort-select" id="sort-select">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="team-size">Team Size</option>
+        <option value="members">Most Members Needed</option>
+      </select>
+    </div>
+
+    <div class="grid-auto" id="projects-grid">
+      <!-- populated by JS -->
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script src="src/load-api.js"></script>
+<script>
+let allProjects = [];
+  let activeFilter = 'all';
+  let searchQuery = '';
+  let sortMode = 'newest';
+
+  async function loadProjects() {
+    try {
+      const list = await getProjects();
+      allProjects = list.map(p => ({
+        id: p.id,
+        title: p.title,
+        description: p.description,
+        category: p.category,
+        status: p.status,
+        owner: p.created_by,
+        ownerInitials: '??',
+        skills: p.skills,
+        teamSize: p.team_size,
+        currentMembers: p.member_count || 1,
+        duration: p.duration,
+        remote: p.work_style === 'remote',
+        createdAt: new Date(p.created_at).getTime()
+      }));
+    } catch (e) {
+      console.error('Failed to load projects', e);
+      allProjects = [];
+    }
+  }
+
+  function filterMatch(project, filter) {
+    switch (filter) {
+      case 'all':       return true;
+      case 'recruiting': return project.status === 'recruiting';
+      case 'ai':        return project.category.toLowerCase().includes('ai') || project.category.toLowerCase().includes('machine');
+      case 'web3':      return project.category.toLowerCase().includes('web3') || project.category.toLowerCase().includes('blockchain');
+      case 'saas':      return project.category.toLowerCase().includes('saas') || project.category.toLowerCase().includes('product');
+      case 'tools':     return project.category.toLowerCase().includes('developer') || project.category.toLowerCase().includes('tool');
+      case 'remote':    return project.remote === true;
+      default:          return true;
+    }
+  }
+
+  function searchMatch(project, query) {
+    if (!query) return true;
+    const q = query.toLowerCase();
+    return (
+      project.title.toLowerCase().includes(q) ||
+      project.description.toLowerCase().includes(q) ||
+      project.category.toLowerCase().includes(q) ||
+      (project.skills || []).some(s => s.toLowerCase().includes(q)) ||
+      (project.owner || '').toLowerCase().includes(q)
+    );
+  }
+
+  function sortProjects(list, mode) {
+    const sorted = [...list];
+    switch (mode) {
+      case 'newest':      return sorted.sort((a, b) => b.createdAt - a.createdAt);
+      case 'oldest':      return sorted.sort((a, b) => a.createdAt - b.createdAt);
+      case 'team-size':   return sorted.sort((a, b) => b.teamSize - a.teamSize);
+      case 'members':     return sorted.sort((a, b) => (b.teamSize - b.currentMembers) - (a.teamSize - a.currentMembers));
+      default:            return sorted;
+    }
+  }
+
+async function renderProjects() {
+    const filtered = allProjects
+      .filter(p => filterMatch(p, activeFilter) && searchMatch(p, searchQuery));
+    const sorted = sortProjects(filtered, sortMode);
+
+    const grid = document.getElementById('projects-grid');
+    grid.innerHTML = '';
+    document.getElementById('result-count').textContent = sorted.length;
+
+    if (!sorted.length) {
+      grid.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1;">
+          <div class="empty-state-icon">🔍</div>
+          <div class="empty-state-title">No projects found</div>
+          <div class="empty-state-text">Try adjusting your search or filters</div>
+          <button class="btn btn-secondary" style="margin-top:16px;" onclick="resetFilters()">Clear Filters</button>
+        </div>
+      `;
+    } else {
+      sorted.forEach(p => grid.appendChild(buildProjectCard(p, true)));
+    }
+  }
+
+  function resetFilters() {
+    activeFilter = 'all';
+    searchQuery = '';
+    document.getElementById('search-input').value = '';
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-filter="all"]').classList.add('active');
+    renderProjects();
+  }
+
+  // Filter buttons
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = btn.dataset.filter;
+      loadProjects().then(renderProjects);
+    });
+  });
+
+  // Search
+  const searchInput = document.getElementById('search-input');
+  searchInput.addEventListener('input', debounce(() => {
+    searchQuery = searchInput.value.trim();
+    loadProjects().then(renderProjects);
+  }, 250));
+
+  // Sort
+  document.getElementById('sort-select').addEventListener('change', (e) => {
+    sortMode = e.target.value;
+    renderProjects();
+  });
+
+  // Initial render
+  loadProjects().then(renderProjects);
+</script>
+</body>
+</html>

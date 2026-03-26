@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — TeamFinder</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>" />
+  <style>
+    .dash-hero {
+      background: linear-gradient(135deg, rgba(255,122,24,0.05) 0%, rgba(255,61,0,0.02) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: var(--space-7) 0 var(--space-6);
+    }
+
+    .dash-welcome {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-5);
+      flex-wrap: wrap;
+    }
+
+    .dash-welcome-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    .dash-avatar {
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      background: var(--gradient-brand);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #fff;
+      box-shadow: 0 0 24px var(--accent-glow);
+      flex-shrink: 0;
+    }
+
+    .dash-greeting {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .dash-name {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .dash-stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-4);
+      margin-top: var(--space-6);
+    }
+
+    .dash-stat-card {
+      padding: var(--space-4) var(--space-5);
+      cursor: default;
+    }
+
+    .dash-stat-num {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: var(--gradient-brand);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .dash-stat-label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    /* Tabs */
+    .tab-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0;
+      margin-bottom: var(--space-6);
+    }
+
+    .tab-btn {
+      padding: 10px 18px;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      margin-bottom: -1px;
+    }
+
+    .tab-btn:hover { color: var(--text-primary); }
+    .tab-btn.active {
+      color: var(--accent-1);
+      border-bottom-color: var(--accent-1);
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Project cards header */
+    .section-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-5);
+    }
+
+    .section-top h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    /* Profile sidebar card */
+    .profile-card {
+      text-align: center;
+      padding: var(--space-6);
+    }
+
+    .profile-skills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      margin-top: var(--space-4);
+    }
+
+    .dash-content {
+      padding: var(--space-7) 0;
+    }
+
+    .dash-layout {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: var(--space-6);
+      align-items: start;
+    }
+
+    /* Dropdown menu */
+    .dropdown-wrap {
+      position: relative;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      min-width: 180px;
+      padding: var(--space-2);
+      z-index: 200;
+      box-shadow: var(--shadow-lg);
+      display: none;
+    }
+
+    .dropdown-menu.open { display: block; }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .dropdown-item:hover {
+      background: rgba(255,255,255,0.06);
+      color: var(--text-primary);
+    }
+
+    .dropdown-item.danger { color: var(--danger); }
+    .dropdown-item.danger:hover { background: rgba(239,68,68,0.1); }
+
+    @media (max-width: 900px) {
+      .dash-layout { grid-template-columns: 1fr; }
+      .dash-stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 480px) {
+      .dash-stats-row { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="orb orb-1" style="opacity:0.6;"></div>
+<div class="orb orb-2" style="opacity:0.5;"></div>
+
+<!-- Navbar -->
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon">🚀</div>
+      <span class="nav-logo-text"><span class="logo-white">Team</span><span class="logo-orange">Finder</span></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="find-team.html" class="nav-link" data-page="find-team.html">🔍 Find Teams</a></li>
+      <li><a href="create-project.html" class="nav-link" data-page="create-project.html">➕ Create Project</a></li>
+      <li><a href="dashboard.html" class="nav-link active" data-page="dashboard.html">📊 Dashboard</a></li>
+    </ul>
+    <div class="nav-actions">
+      <div class="dropdown-wrap">
+        <div style="display:flex;align-items:center;gap:10px;cursor:pointer;" id="nav-user-trigger">
+          <div class="avatar nav-user-avatar">?</div>
+          <span style="font-size:0.875rem;font-weight:500;color:var(--text-secondary);" class="nav-user-name"></span>
+          <span style="color:var(--text-muted);font-size:0.7rem;">▾</span>
+        </div>
+        <div class="dropdown-menu" id="user-dropdown">
+          <div class="dropdown-item" onclick="window.location.href='dashboard.html'">📊 Dashboard</div>
+          <div class="dropdown-item" onclick="window.location.href='create-project.html'">➕ New Project</div>
+          <div class="divider" style="margin:6px 0;"></div>
+          <div class="dropdown-item danger" id="logout-btn">🚪 Log Out</div>
+        </div>
+      </div>
+    </div>
+    <button class="nav-hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<div class="nav-mobile" id="mobile-menu">
+  <a href="find-team.html" class="nav-link">🔍 Find Teams</a>
+  <a href="create-project.html" class="nav-link">➕ Create Project</a>
+  <a href="dashboard.html" class="nav-link active">📊 Dashboard</a>
+  <button class="btn btn-ghost btn-sm" id="mobile-logout" style="margin-top:8px;width:100%;">🚪 Log Out</button>
+</div>
+
+<!-- Dashboard Hero -->
+<div class="dash-hero" style="padding-top:calc(var(--nav-height) + var(--space-6));">
+  <div class="container">
+    <div class="dash-welcome">
+      <div class="dash-welcome-left">
+        <div class="dash-avatar" id="dash-avatar">?</div>
+        <div>
+          <div class="dash-greeting">Good to see you again 👋</div>
+          <div class="dash-name" id="dash-name">Loading...</div>
+          <div style="font-size:0.82rem;color:var(--text-muted);margin-top:4px;" id="dash-email"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <a href="find-team.html" class="btn btn-secondary">🔍 Find Teams</a>
+        <a href="create-project.html" class="btn btn-primary">➕ New Project</a>
+      </div>
+    </div>
+
+    <div class="dash-stats-row">
+      <div class="card dash-stat-card animate-fade-up-delay-1">
+        <div class="dash-stat-num" id="stat-total">—</div>
+        <div class="dash-stat-label">Total Projects</div>
+      </div>
+      <div class="card dash-stat-card animate-fade-up-delay-2">
+        <div class="dash-stat-num" id="stat-recruiting">—</div>
+        <div class="dash-stat-label">Recruiting</div>
+      </div>
+      <div class="card dash-stat-card animate-fade-up-delay-3">
+        <div class="dash-stat-num" id="stat-active">—</div>
+        <div class="dash-stat-label">Active</div>
+      </div>
+      <div class="card dash-stat-card animate-fade-up-delay-3">
+        <div class="dash-stat-num" id="stat-mine">—</div>
+        <div class="dash-stat-label">My Projects</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dashboard Content -->
+<div class="dash-content">
+  <div class="container">
+    <div class="dash-layout">
+      <!-- Main column -->
+      <div>
+        <div class="tab-bar">
+          <button class="tab-btn active" data-tab="all">All Projects</button>
+          <button class="tab-btn" data-tab="mine">My Projects</button>
+          <button class="tab-btn" data-tab="recruiting">Recruiting</button>
+        </div>
+
+        <!-- Tab: All -->
+        <div class="tab-panel active" id="tab-all">
+          <div class="section-top">
+            <h2>All Projects</h2>
+          </div>
+          <div class="grid-auto" id="all-projects-grid">
+            <!-- populated by JS -->
+          </div>
+        </div>
+
+        <!-- Tab: Mine -->
+        <div class="tab-panel" id="tab-mine">
+          <div class="section-top">
+            <h2>My Projects</h2>
+            <a href="create-project.html" class="btn btn-primary btn-sm">➕ New</a>
+          </div>
+          <div class="grid-auto" id="mine-projects-grid">
+            <!-- populated by JS -->
+          </div>
+        </div>
+
+        <!-- Tab: Recruiting -->
+        <div class="tab-panel" id="tab-recruiting">
+          <div class="section-top">
+            <h2>Open to Join</h2>
+          </div>
+          <div class="grid-auto" id="recruiting-grid">
+            <!-- populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div>
+        <div class="card profile-card">
+          <div class="dash-avatar" id="sidebar-avatar" style="margin:0 auto var(--space-3);">?</div>
+          <div style="font-weight:700;font-size:1rem;" id="sidebar-name">—</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:var(--space-3);" id="sidebar-email">—</div>
+          <span class="badge badge-success">Active</span>
+          <div class="profile-skills" id="sidebar-skills">
+            <span class="badge">React</span>
+            <span class="badge">TypeScript</span>
+            <span class="badge">Node.js</span>
+          </div>
+          <div class="divider"></div>
+          <a href="create-project.html" class="btn btn-primary btn-full">➕ Create Project</a>
+        </div>
+
+        <div class="card" style="margin-top:var(--space-4);padding:var(--space-4);">
+          <div style="font-weight:700;font-size:0.9rem;margin-bottom:var(--space-3);">🔥 Quick Actions</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <a href="find-team.html" class="btn btn-secondary btn-full btn-sm" style="justify-content:flex-start;">🔍 Browse Projects</a>
+            <a href="create-project.html" class="btn btn-secondary btn-full btn-sm" style="justify-content:flex-start;">➕ Post a Project</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script src="src/load-api.js"></script>
+<script>
+  // Auth guard
+  if (!auth.requireAuth()) {
+    // Will redirect to login.html
+  }
+
+  const user = auth.getUser();
+
+  // Populate user info
+  if (user) {
+    document.querySelectorAll('.nav-user-avatar').forEach(el => el.textContent = user.initials);
+    document.querySelectorAll('.nav-user-name').forEach(el => el.textContent = user.name);
+    document.getElementById('dash-avatar').textContent = user.initials;
+    document.getElementById('sidebar-avatar').textContent = user.initials;
+    document.getElementById('dash-name').textContent = user.name;
+    document.getElementById('dash-email').textContent = user.email;
+    document.getElementById('sidebar-name').textContent = user.name;
+    document.getElementById('sidebar-email').textContent = user.email;
+  }
+
+// Load dashboard data
+  try {
+    const data = await getDashboard();
+    document.getElementById('stat-total').textContent = data.stats.totalProjects;
+    document.getElementById('stat-recruiting').textContent = data.stats.recruiting;
+    document.getElementById('stat-active').textContent = data.stats.active;
+    document.getElementById('stat-mine').textContent = data.stats.myProjects;
+    
+    // Update user info from API
+    const u = data.user;
+    document.getElementById('dash-name').textContent = u.name;
+    document.getElementById('dash-email').textContent = u.email;
+    
+    // Render all projects tabs correctly
+    const allProj = data.projects || [];
+    const myProj = allProj.filter(p => p.created_by === user?.id);
+    const recProj = allProj.filter(p => p.status === 'recruiting' || p.status === 'Recruiting');
+
+    renderGrid('all-projects-grid', allProj);
+    renderGrid('mine-projects-grid', myProj);
+    renderGrid('recruiting-grid', recProj);
+  } catch (error) {
+    toast.error('Failed to load dashboard: ' + error.message);
+    setTimeout(() => {
+      auth.logout();
+      window.location.href = 'login.html';
+    }, 1500);
+  }
+
+  function renderGrid(gridId, list) {
+    const grid = document.getElementById(gridId);
+    grid.innerHTML = '';
+    if (!list.length) {
+      grid.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1;">
+          <div class="empty-state-icon">📭</div>
+          <div class="empty-state-title">No projects yet</div>
+          <div class="empty-state-text">Be the first to create one!</div>
+          <a href="create-project.html" class="btn btn-primary" style="margin-top:16px;">Create Project</a>
+        </div>
+      `;
+    }
+    // Convert backend project shape to frontend project card builder expectations if needed
+    const normalizedList = list.map(p => ({
+        id: p.id,
+        title: p.title,
+        description: p.description,
+        category: p.category,
+        status: p.status,
+        owner: p.created_by, // Would need user join, using created_by for now
+        ownerInitials: '??',
+        skills: p.skills,
+        teamSize: p.team_size,
+        currentMembers: p.member_count || 1,
+        duration: p.duration,
+        remote: p.work_style === 'remote',
+        createdAt: new Date(p.created_at).getTime()
+    }));
+    normalizedList.forEach(p => grid.appendChild(buildProjectCard(p)));
+  }
+
+  // Tabs
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // Dropdown
+  const trigger = document.getElementById('nav-user-trigger');
+  const dropdown = document.getElementById('user-dropdown');
+  trigger?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdown.classList.toggle('open');
+  });
+  document.addEventListener('click', () => dropdown.classList.remove('open'));
+  dropdown.addEventListener('click', e => e.stopPropagation());
+
+  // Logout
+  function doLogout() {
+    auth.logout();
+    toast.info('See you next time!');
+    setTimeout(() => window.location.href = PAGES.index, 700);
+  }
+  document.getElementById('logout-btn').addEventListener('click', doLogout);
+  document.getElementById('mobile-logout')?.addEventListener('click', doLogout);
+</script>
+</body>
+</html>

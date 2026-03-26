@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TeamFinder — Login</title>
+  <meta name="description" content="Sign in to TeamFinder to discover teams and projects." />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>" />
+  <style>
+    .login-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-5);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 100vh;
+      width: 100%;
+    }
+
+    /* Left panel */
+    .login-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: var(--space-9) var(--space-8);
+      background: #040404;
+      border-right: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-left-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,122,24,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,122,24,0.05) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse at 60% 40%, black 20%, transparent 70%);
+    }
+
+    .login-brand {
+      position: relative;
+      z-index: 1;
+      margin-bottom: var(--space-8);
+    }
+
+    .login-brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      font-size: 1.4rem;
+      letter-spacing: -0.03em;
+      margin-bottom: var(--space-6);
+      text-decoration: none;
+    }
+
+    .login-brand-icon {
+      width: 44px; height: 44px;
+      border-radius: var(--radius-md);
+      background: var(--gradient-brand);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 0 24px var(--accent-glow);
+    }
+
+    .login-headline {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+      margin-bottom: var(--space-4);
+    }
+
+    .login-sub {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: var(--space-7);
+    }
+
+    .login-perks {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .login-perk {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .login-perk-icon {
+      width: 32px; height: 32px;
+      border-radius: var(--radius-sm);
+      background: rgba(255,122,24,0.1);
+      border: 1px solid rgba(255,122,24,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    /* Right panel */
+    .login-right {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: var(--space-9) var(--space-8);
+      background: #000000;
+    }
+
+    .login-form-wrap {
+      max-width: 400px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .login-title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: var(--space-2);
+    }
+
+    .login-desc {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-7);
+    }
+
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+
+    .login-divider {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      margin: var(--space-2) 0;
+    }
+
+    .login-divider::before,
+    .login-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .quick-fill-btns {
+      display: flex;
+      gap: var(--space-2);
+    }
+
+    .quick-fill-btn {
+      flex: 1;
+      padding: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      text-align: center;
+    }
+
+    .quick-fill-btn:hover {
+      background: rgba(255,255,255,0.08);
+      color: var(--text-primary);
+      border-color: var(--border-hover);
+    }
+
+    .input-with-icon {
+      position: relative;
+    }
+
+    .input-with-icon .form-input {
+      padding-left: 42px;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 1rem;
+      pointer-events: none;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 4px;
+      transition: color var(--transition-fast);
+    }
+
+    .password-toggle:hover { color: var(--text-primary); }
+
+    .login-footer-text {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-top: var(--space-5);
+    }
+
+    .login-footer-text a {
+      color: var(--accent-1);
+      font-weight: 600;
+    }
+
+    .login-footer-text a:hover { text-decoration: underline; }
+
+    .btn-submit-wrap {
+      position: relative;
+    }
+
+    @media (max-width: 900px) {
+      .login-split {
+        grid-template-columns: 1fr;
+        min-height: auto;
+      }
+      .login-left { display: none; }
+      .login-right {
+        min-height: 100vh;
+        padding: var(--space-7) var(--space-5);
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<div class="login-split">
+  <!-- Left branding panel -->
+  <div class="login-left">
+    <div class="login-left-grid"></div>
+    <div class="login-brand">
+      <a href="index.html" class="login-brand-logo">
+        <div class="login-brand-icon">🚀</div>
+        <span><span class="logo-white">Team</span><span class="logo-orange">Finder</span></span>
+      </a>
+      <h2 class="login-headline">Build amazing<br /><span class="gradient-text">things together.</span></h2>
+      <p class="login-sub">Join thousands of builders who use TeamFinder to find collaborators, launch projects, and ship products people love.</p>
+      <div class="login-perks">
+        <div class="login-perk">
+          <div class="login-perk-icon">🎯</div>
+          <span>Discover projects matching your exact skill set</span>
+        </div>
+        <div class="login-perk">
+          <div class="login-perk-icon">🤝</div>
+          <span>Build alongside talented engineers and designers</span>
+        </div>
+        <div class="login-perk">
+          <div class="login-perk-icon">🚀</div>
+          <span>From idea to launch with the right team</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right form panel -->
+  <div class="login-right">
+    <div class="login-form-wrap">
+      <div style="margin-bottom:var(--space-7);">
+        <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--text-muted);transition:color var(--transition-fast);" onmouseenter="this.style.color='var(--text-primary)'" onmouseleave="this.style.color='var(--text-muted)'">
+          ← Back to home
+        </a>
+      </div>
+
+      <h1 class="login-title">Welcome back</h1>
+      <p class="login-desc">Sign in to your TeamFinder account</p>
+
+      <div class="login-divider">Quick fill</div>
+      <div class="quick-fill-btns" style="margin-bottom:var(--space-5);">
+        <button class="quick-fill-btn" id="demo-user-btn">👤 Demo User</button>
+        <button class="quick-fill-btn" id="demo-admin-btn">⚡ Power User</button>
+      </div>
+
+      <form class="login-form" id="login-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="email">Email address</label>
+          <div class="input-with-icon">
+            <span class="input-icon">✉</span>
+            <input
+              class="form-input"
+              type="email"
+              id="email"
+              name="email"
+              placeholder="you@example.com"
+              autocomplete="email"
+              required
+            />
+          </div>
+          <span class="form-error" id="email-error">Please enter a valid email.</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <div class="input-with-icon" style="position:relative;">
+            <span class="input-icon">🔒</span>
+            <input
+              class="form-input"
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              required
+              style="padding-right:48px;"
+            />
+            <button type="button" class="password-toggle" id="pw-toggle" aria-label="Toggle password">👁</button>
+          </div>
+          <span class="form-error" id="pass-error">Password must be at least 6 characters.</span>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:0.82rem;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text-secondary);">
+            <input type="checkbox" id="remember" /> Remember me
+          </label>
+          <a href="#" style="color:var(--accent-1);" onclick="toast.info('Password reset coming soon!')">Forgot password?</a>
+        </div>
+
+        <div class="btn-submit-wrap" style="margin-top:var(--space-2);">
+          <button type="submit" class="btn btn-cta btn-full btn-lg" id="submit-btn">
+            Sign In →
+          </button>
+        </div>
+      </form>
+
+      <p class="login-footer-text" style="margin-top:var(--space-5);">
+        Don't have an account? <a href="#" onclick="doRegister(event)">Create one free</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script src="src/load-api.js"></script>
+<script>
+  // Redirect if already logged in
+  if (auth.isLoggedIn()) {
+    window.location.href = PAGES.dash;
+  }
+
+  // Password toggle
+  document.getElementById('pw-toggle').addEventListener('click', () => {
+    const inp = document.getElementById('password');
+    const btn = document.getElementById('pw-toggle');
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      btn.textContent = '🔒';
+    } else {
+      inp.type = 'password';
+      btn.textContent = '👁';
+    }
+  });
+
+  // Quick-fill
+  document.getElementById('demo-user-btn').addEventListener('click', () => {
+    document.getElementById('email').value = 'demo@teamfinder.io';
+    document.getElementById('password').value = 'demo123';
+    clearErrors();
+  });
+
+  document.getElementById('demo-admin-btn').addEventListener('click', () => {
+    document.getElementById('email').value = 'alex@teamfinder.io';
+    document.getElementById('password').value = 'power456';
+    clearErrors();
+  });
+
+  function clearErrors() {
+    document.querySelectorAll('.form-error').forEach(el => el.classList.remove('visible'));
+    document.querySelectorAll('.form-input').forEach(el => el.classList.remove('error'));
+  }
+
+  // Validation
+  function validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  // Form submit
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearErrors();
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    let valid = true;
+
+    if (!validateEmail(email)) {
+      document.getElementById('email').classList.add('error');
+      document.getElementById('email-error').classList.add('visible');
+      valid = false;
+    }
+
+    if (password.length < 6) {
+      document.getElementById('password').classList.add('error');
+      document.getElementById('pass-error').classList.add('visible');
+      valid = false;
+    }
+
+    if (!valid) return;
+
+// Real API login
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Signing in...';
+
+    try {
+      await login(email, password);
+      toast.success('Welcome back! Redirecting...');
+      setTimeout(() => window.location.href = PAGES.dash, 600);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = 'Sign In →';
+    }
+  });
+
+async function doRegister(e) {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    const pass = document.getElementById('password').value;
+    if (email && pass.length >= 6) {
+      const name = email.split('@')[0].replace(/[^a-zA-Z]/g, ' ').trim().replace(/\\w/g, c => c.toUpperCase()[0] + c.slice(1));
+      try {
+        await register(name, email, pass);
+        toast.success('Account created! Redirecting...');
+        setTimeout(() => window.location.href = PAGES.dash, 1000);
+      } catch (error) {
+        toast.error(error.message);
+      }
+    } else {
+      toast.info('Fill in email and password (min 6 chars)');
+    }
+  }
+</script>
+</body>
+</html>
