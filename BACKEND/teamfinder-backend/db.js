@@ -1,4 +1,6 @@
 const { Pool } = require('pg');
+const fs = require('fs');
+const path = require('path');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -16,6 +18,12 @@ const connectDb = async () => {
   try {
     const client = await pool.connect();
     console.log('Database connection successful');
+    
+    // Auto-migrate schema on boot
+    const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
+    await client.query(schema);
+    console.log('Schema synchronized successfully');
+    
     client.release();
   } catch (err) {
     console.error('FATAL: Database connection failed on startup:', err.message);
