@@ -156,12 +156,7 @@ const auth = {
     return !!localStorage.getItem('token');
   },
   getToken() {
-    try {
-      const session = JSON.parse(localStorage.getItem('token') || '{}');
-      return session.token || null;
-    } catch {
-      return null;
-    }
+    return localStorage.getItem('token');
   },
   getUser() {
     try {

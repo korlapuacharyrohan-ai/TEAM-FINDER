@@ -11,7 +11,7 @@ if (typeof fetch !== 'undefined') {
     });
     if (!response.ok) throw new Error((await response.json()).error || 'Login failed');
     const data = await response.json();
-    localStorage.setItem('token', JSON.stringify(data));
+    localStorage.setItem('token', data.token);
     localStorage.setItem('tf_user', JSON.stringify(data.user));
     return data;
   };
@@ -24,34 +24,34 @@ if (typeof fetch !== 'undefined') {
     });
     if (!response.ok) throw new Error((await response.json()).error || 'Register failed');
     const data = await response.json();
-    localStorage.setItem('token', JSON.stringify(data));
+    localStorage.setItem('token', data.token);
     localStorage.setItem('tf_user', JSON.stringify(data.user));
     return data;
   };
 
   window.createProject = async (projectData) => {
-    const sessionStr = localStorage.getItem('token');
-    const token = sessionStr ? JSON.parse(sessionStr).token : null;
+    const token = localStorage.getItem('token');
     
     // The data is already correctly formatted by the frontend form
-    const data = projectData;
-    
     const response = await fetch(`${API_BASE}/projects`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify(projectData)
     });
-    if (!response.ok) throw new Error((await response.json()).error || 'Create failed');
+    if (!response.ok) throw new Error((await response.json()).error || 'Create project failed');
     return response.json();
   };
 
   window.getProjects = async (filters = {}) => {
-    const token = JSON.parse(localStorage.getItem('token') || '{}').token;
+    const token = localStorage.getItem('token');
     const params = new URLSearchParams(filters);
-    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+    const headers = token ? { 
+      'Content-Type': 'application/json', 
+      'Authorization': `Bearer ${token}` 
+    } : { 'Content-Type': 'application/json' };
     const response = await fetch(`${API_BASE}/projects?${params}`, {
       headers
     });
@@ -60,9 +60,12 @@ if (typeof fetch !== 'undefined') {
   };
 
   window.getDashboard = async () => {
-    const token = JSON.parse(localStorage.getItem('token') || '{}').token;
+    const token = localStorage.getItem('token');
     const response = await fetch(`${API_BASE}/dashboard`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` 
+      }
     });
     if (!response.ok) throw new Error('Dashboard fetch failed');
     return response.json();

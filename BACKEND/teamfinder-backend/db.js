@@ -37,6 +37,7 @@ const connectDb = async () => {
     client.release();
   } catch (err) {
     console.error('FATAL: Database connection failed on startup:', err.message);
+    process.exit(1);
   }
 };
 
