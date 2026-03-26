@@ -1,6 +1,6 @@
 // Load API functions in global scope for HTML pages
 if (typeof fetch !== 'undefined') {
-  const API_BASE = 'http://localhost:5000/api';
+  const API_BASE = 'https://team-finder-3.onrender.com/api';
 
   // Import API functions globally
   window.login = async (email, password) => {
