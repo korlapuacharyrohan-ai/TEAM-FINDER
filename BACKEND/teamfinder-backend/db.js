@@ -19,10 +19,20 @@ const connectDb = async () => {
     const client = await pool.connect();
     console.log('Database connection successful');
     
-    // Auto-migrate schema on boot
-    const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
-    await client.query(schema);
-    console.log('Schema synchronized successfully');
+    const checkTable = await client.query(`
+      SELECT EXISTS (
+        SELECT FROM pg_tables
+        WHERE schemaname = 'public' AND tablename  = 'users'
+      );
+    `);
+
+    if (checkTable.rows[0].exists) {
+      console.log('Database already initialized');
+    } else {
+      const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
+      await client.query(schema);
+      console.log('Schema created successfully');
+    }
     
     client.release();
   } catch (err) {

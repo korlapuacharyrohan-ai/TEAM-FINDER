@@ -4,7 +4,7 @@
 
 /* ─── Constants ────────────────────────────── */
 const STORAGE_KEYS = {
-  SESSION:  'tf_session',
+  SESSION:  'token',
   PROJECTS: 'tf_projects',
   USER:     'tf_user',
 };
@@ -153,11 +153,11 @@ const projectsDB = {
 /* ─── Auth ──────────────────────────────────── */
 const auth = {
   isLoggedIn() {
-    return !!localStorage.getItem('tf_session');
+    return !!localStorage.getItem('token');
   },
   getToken() {
     try {
-      const session = JSON.parse(localStorage.getItem('tf_session') || '{}');
+      const session = JSON.parse(localStorage.getItem('token') || '{}');
       return session.token || null;
     } catch {
       return null;
@@ -171,7 +171,7 @@ const auth = {
     }
   },
   logout() {
-    localStorage.removeItem('tf_session');
+    localStorage.removeItem('token');
     localStorage.removeItem('tf_user');
     localStorage.removeItem('tf_projects');
   },
