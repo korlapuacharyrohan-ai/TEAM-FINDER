@@ -10,7 +10,7 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Environment Validation
-const REQUIRED_ENV_VARS = ['DATABASE_URL', 'JWT_SECRET', 'PORT'];
+const REQUIRED_ENV_VARS = ['DATABASE_URL', 'JWT_SECRET'];
 for (const envVar of REQUIRED_ENV_VARS) {
   if (!process.env[envVar]) {
     console.error(`FATAL: Missing mandatory environment variable: ${envVar}`);
@@ -27,25 +27,15 @@ const dashboardRoutes = require('./routes/dashboard');
 
 const app = express();
 
-// Phase 5 - Hardened CORS Configuration
 app.use(cors({
-  origin: "https://teamfinder-frontend.onrender.com",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
+  origin: "*"
 }));
-
-app.options("*", cors());
 
 app.use(express.json());
 
 // Phase 6 - Health Checks
 app.get('/', (req, res) => {
-  res.send('TeamFinder API is running');
-});
-
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
+  res.json({ status: "OK" });
 });
 
 // Mount API Routes
@@ -55,16 +45,16 @@ app.use('/api/dashboard', dashboardRoutes);
 
 // Phase 4 - Global API Fallback Error Handler
 app.use((err, req, res, next) => {
-  console.error('API Error:', err.message || err);
-  res.status(500).json({ error: 'Something went wrong' });
+  console.error("ERROR:", err);
+  res.status(500).json({ error: "Internal Server Error" });
 });
 
 // Phase 1 - Safe Boot Process
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
 
 try {
   const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server safely started on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
   });
 
   server.on('error', (error) => {
