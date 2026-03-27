@@ -4,6 +4,7 @@ if (typeof fetch !== 'undefined') {
 
   // Import API functions globally
   window.login = async (email, password) => {
+    console.log("Calling API... POST", `${API_BASE}/auth/login`);
     const response = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -17,6 +18,7 @@ if (typeof fetch !== 'undefined') {
   };
 
   window.register = async (name, email, password) => {
+    console.log("Calling API... POST", `${API_BASE}/auth/register`);
     const response = await fetch(`${API_BASE}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -33,6 +35,7 @@ if (typeof fetch !== 'undefined') {
     const token = localStorage.getItem('token');
     
     // The data is already correctly formatted by the frontend form
+    console.log("Calling API... POST", `${API_BASE}/projects`);
     const response = await fetch(`${API_BASE}/projects`, {
       method: 'POST',
       headers: {
@@ -52,6 +55,7 @@ if (typeof fetch !== 'undefined') {
       'Content-Type': 'application/json', 
       'Authorization': `Bearer ${token}` 
     } : { 'Content-Type': 'application/json' };
+    console.log("Calling API... GET", `${API_BASE}/projects?${params}`);
     const response = await fetch(`${API_BASE}/projects?${params}`, {
       headers
     });
@@ -61,6 +65,7 @@ if (typeof fetch !== 'undefined') {
 
   window.getDashboard = async () => {
     const token = localStorage.getItem('token');
+    console.log("Calling API... GET", `${API_BASE}/dashboard`);
     const response = await fetch(`${API_BASE}/dashboard`, {
       headers: { 
         'Content-Type': 'application/json',
