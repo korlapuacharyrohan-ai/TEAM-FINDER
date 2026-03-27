@@ -33,7 +33,7 @@ export default function CreateProject() {
 
     try {
       const res = await fetchData('projects', { method: 'POST', body: JSON.stringify(payload) });
-      navigate(`/project/${res.project.id}`);
+      navigate(`/project/${res.id}`);
     } catch (err) {
       setError(err.message);
       setLoading(false);
