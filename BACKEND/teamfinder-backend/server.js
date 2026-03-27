@@ -29,10 +29,13 @@ const app = express();
 
 // Phase 5 - Hardened CORS Configuration
 app.use(cors({
-  origin: "*",
+  origin: "https://teamfinder-frontend.onrender.com",
   methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
 }));
+
+app.options("*", cors());
 
 app.use(express.json());
 
