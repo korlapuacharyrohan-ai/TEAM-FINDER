@@ -357,3 +357,17 @@ document.addEventListener('DOMContentLoaded', () => {
   projectsDB.init();
   initNavbar();
 });
+
+// --- LIVE DEPLOYMENT CONNECTION TRACER ---
+document.addEventListener("DOMContentLoaded", async () => {
+  console.log("DOM READY - JS RUNNING");
+  console.log("Testing API call...");
+
+  try {
+    const res = await fetch("https://team-finder-3.onrender.com/api");
+    const data = await res.text();
+    console.log("API RESPONSE:", data);
+  } catch (err) {
+    console.error("API ERROR:", err);
+  }
+});
