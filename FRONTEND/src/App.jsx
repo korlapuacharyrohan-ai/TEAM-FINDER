@@ -1,22 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
+import OAuthCallback from './pages/OAuthCallback';
 import Dashboard from './pages/Dashboard';
-import FindTeam from './pages/FindTeam';
 import CreateProject from './pages/CreateProject';
 import ProjectDetails from './pages/ProjectDetails';
+import Profile from './pages/Profile';
+import Explore from './pages/Explore';
+import Hackathons from './pages/Hackathons';
+import HackathonDetails from './pages/HackathonDetails';
+import Showcase from './pages/Showcase';
+import { useAuth } from './context/AuthContext';
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
+  const { isAuthenticated, loading } = useAuth();
 
-  useEffect(() => {
-    const handleStorageChange = () => {
-      setIsAuthenticated(!!localStorage.getItem('token'));
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+  if (loading) {
+    return (
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#050505', color: '#888' }}>
+        Authenticating...
+      </div>
+    );
+  }
 
   const ProtectedRoute = ({ children }) => {
     if (!isAuthenticated) return <Navigate to="/login" replace />;
@@ -25,12 +31,16 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <Navbar isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />
+      <Navbar />
       <div className="main-content">
         <Routes>
-          <Route path="/" element={<Navigate to="/find-team" replace />} />
-          <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
-          <Route path="/find-team" element={<FindTeam />} />
+          <Route path="/" element={<Navigate to="/explore" replace />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/oauth-success" element={<OAuthCallback />} />
+          <Route path="/explore" element={<Explore />} />
+          <Route path="/hackathons" element={<Hackathons />} />
+          <Route path="/hackathon/:id" element={<HackathonDetails />} />
+          <Route path="/showcase" element={<Showcase />} />
           <Route 
             path="/dashboard" 
             element={
@@ -48,8 +58,10 @@ export default function App() {
             } 
           />
           <Route path="/project/:id" element={<ProjectDetails />} />
+          <Route path="/profile/:userId" element={<Profile />} />
         </Routes>
       </div>
     </BrowserRouter>
   );
 }
+

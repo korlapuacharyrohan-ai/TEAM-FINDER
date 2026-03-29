@@ -20,28 +20,67 @@ for (const envVar of REQUIRED_ENV_VARS) {
 
 const express = require('express');
 const cors = require('cors');
+const session = require('express-session');
+const passport = require('passport');
+const cookieParser = require('cookie-parser');
+
 
 const authRoutes = require('./routes/auth');
 const projectRoutes = require('./routes/projects');
 const dashboardRoutes = require('./routes/dashboard');
+const userRoutes = require('./routes/users');
+const skillRoutes = require('./routes/skills');
+const hackathonRoutes = require('./routes/hackathons');
+const notificationRoutes = require('./routes/notifications');
+const joinRequestRoutes = require('./routes/join-requests');
 
 const app = express();
 
 app.use(cors({
-  origin: "*"
+  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  credentials: true
 }));
 
+app.use(cookieParser());
 app.use(express.json());
 
-// Phase 6 - Health Checks
+app.use(session({
+  secret: process.env.JWT_SECRET || 'secret_session',
+  resave: false,
+  saveUninitialized: false
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((obj, done) => done(null, obj));
+
+// Render Health Check
+app.get('/api/health', async (req, res) => {
+  try {
+    const db = require('./db');
+    await db.query('SELECT 1');
+    res.json({ status: "healthy", timestamp: new Date().toISOString() });
+  } catch (err) {
+    console.error('Health Check Failure:', err.message);
+    res.status(503).json({ status: "unhealthy", error: "Database unreachable" });
+  }
+});
+
 app.get('/', (req, res) => {
-  res.json({ status: "OK" });
+  res.json({ status: "OK", service: "TeamFinder API" });
 });
 
 // Mount API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/skills', skillRoutes);
+app.use('/api/hackathons', hackathonRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/join-requests', joinRequestRoutes);
 
 // Phase 4 - Global API Fallback Error Handler
 app.use((err, req, res, next) => {
