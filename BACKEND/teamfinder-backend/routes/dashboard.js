@@ -5,7 +5,7 @@ const db = require('../db');
 const router = express.Router();
 
 // GET /api/dashboard - Dashboard data (protected)
-router.get('/', auth, async (req, res, next) => {
+router.get('/', auth, async (req, res) => {
   try {
     const userId = req.userId;
 
@@ -61,12 +61,12 @@ router.get('/', auth, async (req, res, next) => {
     });
   } catch (error) {
     console.error(error);
-    next(error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
 // POST /api/dashboard/requests/:id/respond - Accept or reject request
-router.post('/requests/:id/respond', auth, async (req, res, next) => {
+router.post('/requests/:id/respond', auth, async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body; // 'accepted' or 'rejected'
@@ -144,7 +144,7 @@ router.post('/requests/:id/respond', auth, async (req, res, next) => {
   } catch (error) {
     await db.query('ROLLBACK');
     console.error(error);
-    next(error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 

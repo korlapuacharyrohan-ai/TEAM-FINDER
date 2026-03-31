@@ -8,7 +8,7 @@ const router = express.Router();
  * PATCH /api/join-requests/:id/accept
  * Set status to 'accepted', join project_members, notify applicant
  */
-router.patch('/:id/accept', auth, async (req, res, next) => {
+router.patch('/:id/accept', auth, async (req, res) => {
   try {
     const requestId = req.params.id;
     const userId = req.userId;
@@ -60,7 +60,7 @@ router.patch('/:id/accept', auth, async (req, res, next) => {
   } catch (error) {
     await db.query('ROLLBACK');
     console.error('Join Request Accept Failure:', error);
-    next(error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -68,7 +68,7 @@ router.patch('/:id/accept', auth, async (req, res, next) => {
  * PATCH /api/join-requests/:id/reject
  * Set status to 'rejected', notify applicant
  */
-router.patch('/:id/reject', auth, async (req, res, next) => {
+router.patch('/:id/reject', auth, async (req, res) => {
   try {
     const requestId = req.params.id;
     const userId = req.userId;
@@ -106,7 +106,7 @@ router.patch('/:id/reject', auth, async (req, res, next) => {
   } catch (error) {
     await db.query('ROLLBACK');
     console.error('Join Request Reject Failure:', error);
-    next(error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 

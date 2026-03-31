@@ -11,8 +11,9 @@ export default function Showcase() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE}/projects?is_completed=true`, {
-          headers: { 'Content-Type': 'application/json' }
+        const tokenStr = localStorage.getItem('token') ? `Bearer ${localStorage.getItem('token')}` : '';
+        const res = await fetch('http://localhost:5000/api/projects?is_completed=true', {
+          headers: { 'Authorization': tokenStr }
         });
         if (!res.ok) throw new Error('Failed to fetch showcase');
         const data = await res.json();

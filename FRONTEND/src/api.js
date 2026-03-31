@@ -95,4 +95,4 @@ export const getProjects = (params = {}) => {
   return client.get(`projects${query ? `?${query}` : ''}`);
 };
 
-export const API_BASE = import.meta.env.VITE_API_BASE;
+export const API_BASE = "http://localhost:5000/api";

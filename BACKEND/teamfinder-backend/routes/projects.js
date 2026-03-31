@@ -1,13 +1,16 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const db = require('../db');
-const { callGemini } = require('../utils/ai-helper');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 const router = express.Router();
 
 
 // POST /api/projects - Create project (protected)
-router.post('/', auth, async (req, res, next) => {
+router.post('/', auth, async (req, res) => {
   try {
     const { title, description, category, status, team_size, duration, work_style, skills, demo_url, repo_url, hackathon_id } = req.body;
 
@@ -56,12 +59,12 @@ router.post('/', auth, async (req, res, next) => {
   } catch (error) {
     await db.query('ROLLBACK');
     console.error('Project Creation Failure:', error);
-    next(error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
 // GET /api/projects - List/filter projects (public)
-router.get('/', async (req, res, next) => {
+router.get('/', async (req, res) => {
   try {
     const { search, category, status, work_style, sort, team_size, skills, is_completed } = req.query;
 
@@ -124,12 +127,12 @@ router.get('/', async (req, res, next) => {
     res.json(result.rows);
   } catch (error) {
     console.error(error);
-    next(error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
 // GET /api/projects/:id - Get a single project
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     let query = `SELECT p.id, p.title, p.description, p.category, p.status, p.team_size, p.duration, p.work_style, p.created_by, p.created_at, p.demo_url, p.repo_url, p.thumbnail_url, p.is_completed, p.hackathon_result, 
@@ -145,12 +148,12 @@ router.get('/:id', async (req, res, next) => {
   } catch (error) {
     if (error.code === '22P02') return res.status(404).json({ error: 'Project not found' });
     console.error(error);
-    next(error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
 // POST /api/projects/:id/apply - Specifically apply to join a project
-router.post('/:id/apply', auth, async (req, res, next) => {
+router.post('/:id/apply', auth, async (req, res) => {
   try {
     const { id } = req.params;
     const { message } = req.body;
@@ -173,12 +176,12 @@ router.post('/:id/apply', auth, async (req, res, next) => {
     res.json({ success: true, message: 'Application submitted' });
   } catch (error) {
     console.error(error);
-    next(error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
 // DELETE /api/projects/:id - Delete project (Owner only)
-router.delete('/:id', auth, async (req, res, next) => {
+router.delete('/:id', auth, async (req, res) => {
   try {
     const { id } = req.params;
     const project = await db.query('SELECT created_by FROM projects WHERE id = $1', [id]);
@@ -195,12 +198,12 @@ router.delete('/:id', auth, async (req, res, next) => {
     res.json({ success: true });
   } catch (error) {
     console.error('Project Deletion Failure:', error);
-    next(error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
 // POST /api/projects/:id/join - Legacy join (mapped to Dashboard response for now if still used)
-router.post('/:id/join', auth, async (req, res, next) => {
+router.post('/:id/join', auth, async (req, res) => {
   try {
     const { id } = req.params;
     const { role, message } = req.body;
@@ -224,12 +227,12 @@ router.post('/:id/join', auth, async (req, res, next) => {
     res.status(201).json(membership.rows[0]);
   } catch (error) {
     console.error('Legacy Join Failure:', error);
-    next(error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
 // PUT /api/projects/:id - Update Showcase attributes (protected)
-router.put('/:id', auth, async (req, res, next) => {
+router.put('/:id', auth, async (req, res) => {
   try {
     const { id } = req.params;
     const { thumbnail_url, is_completed, hackathon_result, demo_url, repo_url } = req.body;
@@ -253,12 +256,12 @@ router.put('/:id', auth, async (req, res, next) => {
     res.json(result.rows[0]);
   } catch (error) {
     console.error(error);
-    next(error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
 // GET /api/projects/:id/members - Get list of project members (public)
-router.get('/:id/members', async (req, res, next) => {
+router.get('/:id/members', async (req, res) => {
   try {
     const { id } = req.params;
     const result = await db.query(`
@@ -271,12 +274,12 @@ router.get('/:id/members', async (req, res, next) => {
     res.json(result.rows);
   } catch (error) {
     console.error(error);
-    next(error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
 // POST /api/projects/:id/endorse - Endorse a teammate (protected)
-router.post('/:id/endorse', auth, async (req, res, next) => {
+router.post('/:id/endorse', auth, async (req, res) => {
   try {
     const { id } = req.params;
     const { endorsed_user_id, skill } = req.body;
@@ -327,12 +330,12 @@ router.post('/:id/endorse', auth, async (req, res, next) => {
       return res.status(400).json({ error: 'You have already endorsed this user for this skill on this project' });
     }
     console.error(error);
-    next(error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
 // GET /api/projects/:id/suggest-teammates - AI Teammate Suggestion with Gemini 1.5 Flash
-router.get('/:id/suggest-teammates', auth, async (req, res, next) => {
+router.get('/:id/suggest-teammates', auth, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -390,66 +393,74 @@ router.get('/:id/suggest-teammates', auth, async (req, res, next) => {
       return res.json({ suggestions: [] });
     }
 
-    // --- AI/Resilient Generation ---
-    const prompt = `
-      You are a technical recruiter assistant. Be concise and direct.
-      For each candidate, output: name, matched skills (comma-separated),
-      skill overlap count, and one sentence (max 15 words) on why they fit.
-      No filler phrases. No enthusiasm. Facts only.
+    // --- Gemini 1.5 Flash Integration ---
+    try {
+      const prompt = `
+        You are a technical recruiter assistant. Be concise and direct.
+        For each candidate, output: name, matched skills (comma-separated),
+        skill overlap count, and one sentence (max 15 words) on why they fit.
+        No filler phrases. No enthusiasm. Facts only.
 
-      Project: ${project.title} - ${project.description}
-      Required Skills: ${projectSkillNames.join(', ')}
+        Project: ${project.title} - ${project.description}
+        Required Skills: ${projectSkillNames.join(', ')}
 
-      Candidates:
-      ${candidates.map(c => `- ID: ${c.id}, Name: ${c.name}, Bio: ${c.bio}, Skills: ${c.user_skills.join(', ')}`).join('\n')}
+        Candidates:
+        ${candidates.map(c => `- ID: ${c.id}, Name: ${c.name}, Bio: ${c.bio}, Skills: ${c.user_skills.join(', ')}`).join('\n')}
 
-      Output strictly JSON in this format:
-      {
-        "suggestions": [
-          {
-            "userId": "uuid",
-            "name": "string",
-            "matchedSkills": ["skill1", "skill2"],
-            "overlapCount": 0,
-            "reason": "string (max 15 words)"
-          }
-        ]
-      }
-    `;
+        Output strictly JSON in this format:
+        {
+          "suggestions": [
+            {
+              "userId": "uuid",
+              "name": "string",
+              "matchedSkills": ["skill1", "skill2"],
+              "overlapCount": 0,
+              "reason": "string (max 15 words)"
+            }
+          ]
+        }
+      `;
 
-    const mockData = {
-      suggestions: candidates.slice(0, 5).map(c => {
-         const matched = c.user_skills.filter(s => projectSkillNames.includes(s));
-         return {
-            userId: c.id,
-            name: c.name,
-            matchedSkills: matched,
-            overlapCount: matched.length,
-            reason: `Strong match due to expertise in ${matched.slice(0, 2).join(' and ')} and proven experience.`
-         };
-      })
-    };
-
-    const aiResponse = await callGemini(prompt, mockData);
-    
-    if (aiResponse && Array.isArray(aiResponse.suggestions)) {
-      const suggestions = aiResponse.suggestions.map(s => {
-        const original = candidates.find(c => c.id === s.userId || c.name === s.name);
-        return {
-          ...s,
-          avatar_url: original?.avatar_url,
-          availability: original?.availability
-        };
-      }).slice(0, 5);
+      const aiResult = await model.generateContent(prompt);
+      const text = aiResult.response.text();
       
-      return res.json({ suggestions });
+      // Extract JSON from markdown if Gemini wraps it
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const aiResponse = JSON.parse(jsonMatch[0]);
+        // Map back any missing UI fields from our DB rows (avatar_url, etc)
+        const suggestions = aiResponse.suggestions.map(s => {
+          const original = candidates.find(c => c.id === s.userId || c.name === s.name);
+          return {
+            ...s,
+            avatar_url: original?.avatar_url,
+            availability: original?.availability
+          };
+        }).slice(0, 5);
+        
+        return res.json({ suggestions });
+      }
+    } catch (aiErr) {
+      console.error('Gemini Suggestion Error (Returning SQL Fallback):', aiErr);
     }
 
-    next(error);
+    // --- Fallback Mechanism ---
+    const fallbackResults = candidates.slice(0, 5).map(c => ({
+      userId: c.id,
+      name: c.name,
+      avatar_url: c.avatar_url,
+      availability: c.availability,
+      matchedSkills: c.user_skills.filter(s => projectSkillNames.includes(s)),
+      overlapCount: parseInt(c.overlap_count),
+      reason: `Direct skill match (${c.overlap_count} skills).`
+    }));
+
+    res.json({ suggestions: fallbackResults });
   } catch (error) {
-    console.error('Suggest Teammates Route Failure:', error);
-    next(error);
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
 module.exports = router;
+
