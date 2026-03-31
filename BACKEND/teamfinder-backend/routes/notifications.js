@@ -4,16 +4,38 @@ const db = require('../db');
 
 const router = express.Router();
 
-// GET /api/notifications - List user's notifications
+router.param('id', (req, res, next, id) => {
+  if (id && !db.isValidUUID(id)) {
+    return res.status(400).json({ error: 'Invalid notification reference ID' });
+  }
+  next();
+});
+
+// GET /api/notifications - Get all for user
 router.get('/', auth, async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50',
+      'SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC',
       [req.userId]
     );
     res.json(result.rows);
   } catch (error) {
-    console.error('Error fetching notifications:', error);
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PATCH /api/notifications/:id/read - Mark one as read
+router.patch('/:id/read', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.query(
+      'UPDATE notifications SET is_read = true WHERE id = $1 AND user_id = $2',
+      [id, req.userId]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -22,31 +44,13 @@ router.get('/', auth, async (req, res) => {
 router.patch('/read-all', auth, async (req, res) => {
   try {
     await db.query(
-      'UPDATE notifications SET is_read = true WHERE user_id = $1 AND is_read = false',
+      'UPDATE notifications SET is_read = true WHERE user_id = $1',
       [req.userId]
     );
     res.json({ success: true });
   } catch (error) {
-    console.error('Error marking all notifications read:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-// PATCH /api/notifications/:id/read - Mark one as read
-router.patch('/:id/read', auth, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const result = await db.query(
-      'UPDATE notifications SET is_read = true WHERE id = $1 AND user_id = $2 RETURNING *',
-      [id, req.userId]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Notification not found' });
-    }
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error('Error marking notification read:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 

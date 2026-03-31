@@ -17,7 +17,6 @@ pool.on('error', (err, client) => {
 const connectDb = async () => {
   try {
     const client = await pool.connect();
-    console.log('Database connection successful');
     
     const checkTable = await client.query(`
       SELECT EXISTS (
@@ -27,11 +26,10 @@ const connectDb = async () => {
     `);
 
     if (checkTable.rows[0].exists) {
-      console.log('Database already initialized');
+      // Database already initialized
     } else {
       const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
       await client.query(schema);
-      console.log('Schema created successfully');
     }
     
     // Auto-migrate new columns
@@ -48,7 +46,6 @@ const connectDb = async () => {
         ALTER TABLE users ADD COLUMN IF NOT EXISTS github_access_token TEXT;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active TIMESTAMP DEFAULT NOW();
       `);
-      console.log('User profile fields ensured');
     } catch (migErr) {
       console.error('Migration error:', migErr.message);
     }
@@ -83,7 +80,6 @@ const connectDb = async () => {
         client.query('INSERT INTO skills (name) VALUES ($1) ON CONFLICT (name) DO NOTHING', [skill])
       );
       await Promise.all(insertPromises);
-      console.log('Skill tables and initial data ensured');
     } catch (migErr) {
       console.error('Skills migration error:', migErr.message);
     }
@@ -98,7 +94,6 @@ const connectDb = async () => {
         ALTER TABLE projects ADD COLUMN IF NOT EXISTS is_completed BOOLEAN DEFAULT false;
         ALTER TABLE projects ADD COLUMN IF NOT EXISTS hackathon_result VARCHAR(200);
       `);
-      console.log('Project additions ensured');
     } catch (migErr) {
       console.error('Project additions migration error:', migErr.message);
     }
@@ -134,7 +129,6 @@ const connectDb = async () => {
         client.query('INSERT INTO hackathons (name, description, deadline, prize, theme_tags, external_link) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (name) DO NOTHING', [h.name, h.desc, h.deadline, h.prize, h.tags, h.link])
       );
       await Promise.all(insertHackPromises);
-      console.log('Hackathons setup ensured');
     } catch (migErr) {
       console.error('Hackathon migration error:', migErr.message);
     }
@@ -154,7 +148,6 @@ const connectDb = async () => {
         ALTER TABLE join_requests DROP CONSTRAINT IF EXISTS unique_project_user;
         ALTER TABLE join_requests ADD CONSTRAINT unique_project_user UNIQUE(project_id, user_id);
       `);
-      console.log('Join requests schema ensured');
     } catch (migErr) {
       console.error('Join requests migration error:', migErr.message);
     }
@@ -171,7 +164,6 @@ const connectDb = async () => {
           created_at TIMESTAMP DEFAULT NOW()
         );
       `);
-      console.log('Notifications schema ensured');
     } catch (migErr) {
       console.error('Notifications migration error:', migErr.message);
     }
@@ -188,7 +180,6 @@ const connectDb = async () => {
           UNIQUE(endorser_id, endorsed_user_id, skill, project_id)
         );
       `);
-      console.log('Endorsements schema ensured');
     } catch (migErr) {
       console.error('Endorsements migration error:', migErr.message);
     }
@@ -201,7 +192,6 @@ const connectDb = async () => {
           expires_at TIMESTAMP NOT NULL DEFAULT (NOW() + INTERVAL '60 seconds')
         );
       `);
-      console.log('Auth codes schema ensured');
     } catch (migErr) {
       console.error('Auth codes migration error:', migErr.message);
     }
@@ -215,7 +205,15 @@ const connectDb = async () => {
 
 connectDb();
 
+const isValidUUID = (id) => {
+  if (!id) return false;
+  const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return regex.test(id);
+};
+
 module.exports = {
+  pool,
+  isValidUUID,
   query: async (text, params) => {
     try {
       return await pool.query(text, params);

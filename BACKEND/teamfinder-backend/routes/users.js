@@ -8,6 +8,13 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 const router = express.Router();
 
+router.param('id', (req, res, next, id) => {
+  if (id && id !== 'me' && !db.isValidUUID(id)) {
+    return res.status(400).json({ error: 'Invalid user reference ID' });
+  }
+  next();
+});
+
 
 // GET /api/users - List/filter users
 router.get('/', async (req, res) => {

@@ -8,28 +8,34 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 const router = express.Router();
 
+// UUID Validation Middleware for this router
+router.param('id', (req, res, next, id) => {
+  if (id && !db.isValidUUID(id)) {
+    return res.status(400).json({ error: 'Invalid project reference ID' });
+  }
+  next();
+});
+
 
 // POST /api/projects - Create project (protected)
 router.post('/', auth, async (req, res) => {
+  const client = await db.pool.connect();
   try {
     const { title, description, category, status, team_size, duration, work_style, skills, demo_url, repo_url, hackathon_id } = req.body;
 
-    // Validate scalar fields
     if (!title || !description || !category || !status || !team_size || !duration || !work_style) {
       return res.status(400).json({ error: 'All fields are required' });
     }
 
-    // Validate skills array
     if (!Array.isArray(skills) || skills.length === 0) {
       return res.status(400).json({ error: 'Skills must be a non-empty array' });
     }
 
     const createdBy = req.userId;
 
-    await db.query('BEGIN');
+    await client.query('BEGIN');
 
-    // Insert project
-    const projectResult = await db.query(
+    const projectResult = await client.query(
       `INSERT INTO projects (id, title, description, category, status, team_size, duration, work_style, skills, demo_url, repo_url, created_by, created_at, hackathon_id) 
        VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), $12) RETURNING *`,
       [title, description, category, status, team_size, duration, work_style, skills, demo_url || null, repo_url || null, createdBy, hackathon_id || null]
@@ -37,29 +43,28 @@ router.post('/', auth, async (req, res) => {
 
     const project = projectResult.rows[0];
 
-    // Add creator as member
-    await db.query(
+    await client.query(
       'INSERT INTO project_members (id, user_id, project_id, role) VALUES (gen_random_uuid(), $1, $2, $3)',
       [createdBy, project.id, 'Creator']
     );
 
-    // Insert into project_skills
     if (skills && skills.length > 0) {
-      const skillsRes = await db.query('SELECT id, name FROM skills WHERE name = ANY($1)', [skills]);
+      const skillsRes = await client.query('SELECT id, name FROM skills WHERE name = ANY($1)', [skills]);
       const skillIds = skillsRes.rows.map(r => r.id);
       if (skillIds.length > 0) {
         const insertQuery = `INSERT INTO project_skills (project_id, skill_id) VALUES ${skillIds.map((_, i) => `($1, $${i + 2})`).join(', ')}`;
-        await db.query(insertQuery, [project.id, ...skillIds]);
+        await client.query(insertQuery, [project.id, ...skillIds]);
       }
     }
 
-    await db.query('COMMIT');
-
+    await client.query('COMMIT');
     res.status(201).json(project);
   } catch (error) {
-    await db.query('ROLLBACK');
+    await client.query('ROLLBACK');
     console.error('Project Creation Failure:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  } finally {
+    client.release();
   }
 });
 
@@ -251,7 +256,14 @@ router.put('/:id', auth, async (req, res) => {
       UPDATE projects 
       SET thumbnail_url = $1, is_completed = $2, hackathon_result = $3, demo_url = $4, repo_url = $5
       WHERE id = $6 RETURNING *
-    `, [thumbnail_url || null, is_completed || false, hackathon_result || null, demo_url || null, repo_url || null, id]);
+    `, [
+      thumbnail_url !== undefined ? thumbnail_url : existingProject.rows[0].thumbnail_url, 
+      is_completed !== undefined ? is_completed : existingProject.rows[0].is_completed, 
+      hackathon_result !== undefined ? hackathon_result : existingProject.rows[0].hackathon_result, 
+      demo_url !== undefined ? demo_url : existingProject.rows[0].demo_url, 
+      repo_url !== undefined ? repo_url : existingProject.rows[0].repo_url, 
+      id
+    ]);
 
     res.json(result.rows[0]);
   } catch (error) {
@@ -284,6 +296,10 @@ router.post('/:id/endorse', auth, async (req, res) => {
     const { id } = req.params;
     const { endorsed_user_id, skill } = req.body;
     const endorserId = req.userId;
+
+    if (endorsed_user_id && !db.isValidUUID(endorsed_user_id)) {
+      return res.status(400).json({ error: 'Invalid user reference for endorsement' });
+    }
 
     if (!endorsed_user_id || !skill) {
       return res.status(400).json({ error: 'Endorsed user and skill are required' });
@@ -421,14 +437,15 @@ router.get('/:id/suggest-teammates', auth, async (req, res) => {
         }
       `;
 
-      const aiResult = await model.generateContent(prompt);
+      const aiPromise = model.generateContent(prompt);
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('AI timeout')), 5000));
+      
+      const aiResult = await Promise.race([aiPromise, timeoutPromise]);
       const text = aiResult.response.text();
       
-      // Extract JSON from markdown if Gemini wraps it
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const aiResponse = JSON.parse(jsonMatch[0]);
-        // Map back any missing UI fields from our DB rows (avatar_url, etc)
         const suggestions = aiResponse.suggestions.map(s => {
           const original = candidates.find(c => c.id === s.userId || c.name === s.name);
           return {
@@ -441,7 +458,7 @@ router.get('/:id/suggest-teammates', auth, async (req, res) => {
         return res.json({ suggestions });
       }
     } catch (aiErr) {
-      console.error('Gemini Suggestion Error (Returning SQL Fallback):', aiErr);
+      console.error('Gemini Suggestion Protection Triggered (Fallback Used):', aiErr.message);
     }
 
     // --- Fallback Mechanism ---

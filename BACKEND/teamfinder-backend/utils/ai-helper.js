@@ -19,7 +19,7 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
  */
 async function callGemini(prompt, mockData = null) {
   if (MOCK_MODE) {
-    console.log("[AI-HELPER] Mock Mode Active. Returning default response.");
+    console.warn("[AI-HELPER] Mock Mode Active. Returning default response.");
     return mockData;
   }
 
@@ -60,7 +60,7 @@ async function callGemini(prompt, mockData = null) {
   }
 
   // Final Fallback if all retries fail or non-retryable error
-  console.log("[AI-HELPER] All retries failed. Returning mock/default data.");
+  console.warn("[AI-HELPER] All retries failed or timed out. Returning mock/default data.");
   return mockData;
 }
 

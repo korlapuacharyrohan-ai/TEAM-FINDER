@@ -45,7 +45,8 @@ export default function Login() {
   };
 
   const handleGitHubLogin = () => {
-    window.location.href = `http://localhost:5000/api/auth/github`;
+    const apiBase = import.meta.env.VITE_API_BASE || "/api";
+    window.location.href = `${apiBase}/auth/github`;
   };
 
   return (

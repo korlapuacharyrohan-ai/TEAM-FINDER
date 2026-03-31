@@ -25,6 +25,7 @@ const cors = require('cors');
 const session = require('express-session');
 const passport = require('passport');
 const cookieParser = require('cookie-parser');
+const rateLimit = require('express-rate-limit');
 
 
 const authRoutes = require('./routes/auth');
@@ -39,7 +40,7 @@ const joinRequestRoutes = require('./routes/join-requests');
 const app = express();
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: process.env.FRONTEND_URL,
   credentials: true
 }));
 
@@ -47,13 +48,34 @@ app.use(cookieParser());
 app.use(express.json());
 
 const db = require('./db');
+
+// Health Check Endpoint (Lightweight, non-DB dependent)
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
 app.get('/', (req, res) => res.json({ status: 'ok' }));
+
+// Auth Rate Limiting (Production Security)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { error: 'Too many authentication attempts — please try again in 15 minutes' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 app.use(session({
   secret: process.env.JWT_SECRET || 'secret_session',
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
 }));
+
+app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/login', authLimiter);
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -74,7 +96,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/join-requests', joinRequestRoutes);
 
 // Phase 1 - Safe Boot Process
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

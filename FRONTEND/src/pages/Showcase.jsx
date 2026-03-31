@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getUsers } from '../api';
+import { getProjects } from '../api';
 import { Trophy, Star, ExternalLink, GitBranch, Medal } from 'lucide-react';
 
 export default function Showcase() {
@@ -11,12 +11,8 @@ export default function Showcase() {
   useEffect(() => {
     async function load() {
       try {
-        const tokenStr = localStorage.getItem('token') ? `Bearer ${localStorage.getItem('token')}` : '';
-        const res = await fetch('http://localhost:5000/api/projects?is_completed=true', {
-          headers: { 'Authorization': tokenStr }
-        });
-        if (!res.ok) throw new Error('Failed to fetch showcase');
-        const data = await res.json();
+        const data = await getProjects({ is_completed: true });
+        setProjects(data);
         setProjects(data);
       } catch (err) {
         setError(err.message);

@@ -172,8 +172,9 @@ passport.use(new GitHubStrategy({
       const topLanguages = [];
       try {
         const reposRes = await fetch(`https://api.github.com/users/${profile.username}/repos?per_page=100`, {
-          headers: { 'Authorization': `token ${accessToken}` }
+          headers: { 'User-Agent': 'TeamFinder-App', 'Authorization': `token ${accessToken}` }
         });
+        if (!reposRes.ok) throw new Error(`GitHub API responded with ${reposRes.status}`);
         const repos = await reposRes.json();
         if (Array.isArray(repos)) {
           const langCounts = {};
@@ -257,22 +258,21 @@ router.get('/github', (req, res, next) => {
 
 router.get('/github/callback', 
   (req, res, next) => {
-    if (!process.env.FRONTEND_URL) {
-      return res.status(500).json({ error: 'Server configuration error: FRONTEND_URL is not set. Cannot perform OAuth redirect.' });
-    }
-    passport.authenticate('github', { failureRedirect: `${process.env.FRONTEND_URL}/login?error=oauth_failed` })(req, res, next);
+    const frontendUrl = process.env.FRONTEND_URL;
+    passport.authenticate('github', { failureRedirect: `${frontendUrl}/login?error=oauth_failed` })(req, res, next);
   },
   async function(req, res) {
+    const frontendUrl = process.env.FRONTEND_URL;
     try {
       const codeRes = await db.query(
         'INSERT INTO auth_codes (user_id) VALUES ($1) RETURNING code',
         [req.user.id]
       );
       const code = codeRes.rows[0].code;
-      res.redirect(`${process.env.FRONTEND_URL}/oauth-success?code=${code}`);
+      res.redirect(`${frontendUrl}/oauth-success?code=${code}`);
     } catch (err) {
       console.error('OAuth Code Gen Error:', err);
-      res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_code_failed`);
+      res.redirect(`${frontendUrl}/login?error=auth_code_failed`);
     }
   }
 
