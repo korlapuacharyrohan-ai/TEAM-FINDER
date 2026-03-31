@@ -83,3 +83,16 @@ export const deleteProject = (projectId) =>
 
 export const updateProjectSettings = (projectId, data) => 
   client.put(`projects/${projectId}`, data);
+
+export const getDashboard = () => client.get('dashboard');
+
+export const requestToJoinProject = (projectId, role, message) => 
+  client.post(`projects/${projectId}/requests`, { role, message });
+
+export const getProjects = (params = {}) => {
+  const cleanParams = Object.fromEntries(Object.entries(params).filter(([_, v]) => v != null && v !== ''));
+  const query = new URLSearchParams(cleanParams).toString();
+  return client.get(`projects${query ? `?${query}` : ''}`);
+};
+
+export const API_BASE = import.meta.env.VITE_API_BASE;

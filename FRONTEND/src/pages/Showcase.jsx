@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getUsers } from '../api';
-import { Trophy, Star, ExternalLink, Github, Medal } from 'lucide-react';
+import { Trophy, Star, ExternalLink, GitBranch, Medal } from 'lucide-react';
 
 export default function Showcase() {
   const [projects, setProjects] = useState([]);
@@ -11,9 +11,8 @@ export default function Showcase() {
   useEffect(() => {
     async function load() {
       try {
-        const tokenStr = localStorage.getItem('token') ? `Bearer ${localStorage.getItem('token')}` : '';
-        const res = await fetch('http://localhost:5000/api/projects?is_completed=true', {
-          headers: { 'Authorization': tokenStr }
+        const res = await fetch(`${import.meta.env.VITE_API_BASE}/projects?is_completed=true`, {
+          headers: { 'Content-Type': 'application/json' }
         });
         if (!res.ok) throw new Error('Failed to fetch showcase');
         const data = await res.json();

@@ -4,18 +4,18 @@ const db = require('../db');
 const router = express.Router();
 
 // GET /api/hackathons - List all open hackathons
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   try {
     const result = await db.query('SELECT * FROM hackathons ORDER BY deadline ASC');
     res.json(result.rows);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    next(error);
   }
 });
 
 // GET /api/hackathons/:id - Specific hackathon details and associated projects
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -45,7 +45,7 @@ router.get('/:id', async (req, res) => {
     if (error.code === '22P02') {
       return res.status(404).json({ error: 'Hackathon not found' });
     }
-    res.status(500).json({ error: 'Server error' });
+    next(error);
   }
 });
 

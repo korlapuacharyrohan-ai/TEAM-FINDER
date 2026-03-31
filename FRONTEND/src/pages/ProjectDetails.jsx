@@ -2,7 +2,7 @@ import { getProject, getProjectMembers, endorseUser, applyToProject, getProjectR
 import { useAuth } from '../context/AuthContext';
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Clock, Users, Briefcase, ChevronLeft, ExternalLink, Github, Settings, Image as ImageIcon, Medal, CheckCircle, Star, Zap, Trash2, X, MessageSquare, Rocket } from 'lucide-react';
+import { Clock, Users, Briefcase, ChevronLeft, ExternalLink, GitBranch, Settings, Image as ImageIcon, Medal, CheckCircle, Star, Zap, Trash2, X, MessageSquare, Rocket } from 'lucide-react';
 
 export default function ProjectDetails() {
   const { id } = useParams();
@@ -333,7 +333,7 @@ export default function ProjectDetails() {
                 )}
                 {project.repo_url && (
                   <a href={project.repo_url} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ flex: 1, padding: '10px', minWidth: 'auto' }} title="Repo">
-                    <Github size={18} />
+                    <GitBranch size={18} />
                   </a>
                 )}
               </div>

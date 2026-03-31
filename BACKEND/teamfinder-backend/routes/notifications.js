@@ -5,7 +5,7 @@ const db = require('../db');
 const router = express.Router();
 
 // GET /api/notifications - List user's notifications
-router.get('/', auth, async (req, res) => {
+router.get('/', auth, async (req, res, next) => {
   try {
     const result = await db.query(
       'SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50',
@@ -14,12 +14,12 @@ router.get('/', auth, async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching notifications:', error);
-    res.status(500).json({ error: 'Server error' });
+    next(error);
   }
 });
 
 // PATCH /api/notifications/read-all - Mark all as read
-router.patch('/read-all', auth, async (req, res) => {
+router.patch('/read-all', auth, async (req, res, next) => {
   try {
     await db.query(
       'UPDATE notifications SET is_read = true WHERE user_id = $1 AND is_read = false',
@@ -28,12 +28,12 @@ router.patch('/read-all', auth, async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('Error marking all notifications read:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    next(error);
   }
 });
 
 // PATCH /api/notifications/:id/read - Mark one as read
-router.patch('/:id/read', auth, async (req, res) => {
+router.patch('/:id/read', auth, async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = await db.query(
@@ -46,7 +46,7 @@ router.patch('/:id/read', auth, async (req, res) => {
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error marking notification read:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    next(error);
   }
 });
 

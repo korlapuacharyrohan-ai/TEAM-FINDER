@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loginApi, registerApi, API_BASE } from '../api';
+import { loginApi, registerApi } from '../api';
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
@@ -45,7 +45,7 @@ export default function Login() {
   };
 
   const handleGitHubLogin = () => {
-    window.location.href = `${API_BASE}/auth/github`;
+    window.location.href = `${import.meta.env.VITE_API_BASE}/auth/github`;
   };
 
   return (

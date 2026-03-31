@@ -1,16 +1,13 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const db = require('../db');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const { callGemini } = require('../utils/ai-helper');
 
 const router = express.Router();
 
 
 // GET /api/users - List/filter users
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   try {
     const { search, skills, availability } = req.query;
 
@@ -53,12 +50,12 @@ router.get('/', async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    next(error);
   }
 });
 
 // GET /api/users/:id - Public profile
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -108,12 +105,12 @@ router.get('/:id', async (req, res) => {
     if (error.code === '22P02') { // invalid UUID format
       return res.status(404).json({ error: 'User not found' });
     }
-    res.status(500).json({ error: 'Server error' });
+    next(error);
   }
 });
 
 // PATCH /api/users/me - Protected profile update
-router.patch('/me', auth, async (req, res) => {
+router.patch('/me', auth, async (req, res, next) => {
   try {
     const { bio, github_url, linkedin_url, portfolio_url, availability } = req.body;
     const userId = req.userId;
@@ -137,12 +134,12 @@ router.patch('/me', auth, async (req, res) => {
     res.json(updateResult.rows[0]);
   } catch (error) {
     console.error('Profile Update Failure:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    next(error);
   }
 });
 
 // POST /api/users/me/skills - Replace user's skills (delete existing, insert new)
-router.post('/me/skills', auth, async (req, res) => {
+router.post('/me/skills', auth, async (req, res, next) => {
   try {
     const { skills } = req.body;
     const userId = req.userId;
@@ -172,12 +169,12 @@ router.post('/me/skills', auth, async (req, res) => {
   } catch (error) {
     await db.query('ROLLBACK');
     console.error('Skill Update Failure:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    next(error);
   }
 });
 
 // GET /api/users/:id/match-score - AI Skill Similarity with Gemini 1.5 Flash
-router.get('/:id/match-score', auth, async (req, res) => {
+router.get('/:id/match-score', auth, async (req, res, next) => {
   try {
     const targetUserId = req.params.id;
     const currentUserId = req.userId;
@@ -207,49 +204,41 @@ router.get('/:id/match-score', auth, async (req, res) => {
     const union = new Set([...selfSet, ...targetSet]);
     const fallbackScore = union.size === 0 ? 0 : Math.round((intersection.size / union.size) * 100);
 
-    // --- Gemini 1.5 Flash Analysis ---
-    try {
-      const prompt = `
-        You are a skills analysis tool. Output a match percentage (0-100)
-        and exactly 3 bullet points listing shared skills, complementary skills,
-        and one gap. Each bullet max 12 words. No preamble.
+    // --- AI/Resilient Generation ---
+    const prompt = `
+      You are a skills analysis tool. Output a match percentage (0-100)
+      and exactly 3 bullet points listing shared skills, complementary skills,
+      and one gap. Each bullet max 12 words. No preamble.
 
-        Context:
-        Self Skills: ${self.skill_names.join(', ') || 'None'}
-        Target User Skills: ${target.skill_names.join(', ') || 'None'}
+      Context:
+      Self Skills: ${self.skill_names.join(', ') || 'None'}
+      Target User Skills: ${target.skill_names.join(', ') || 'None'}
 
-        Output strictly JSON:
-        {
-          "score": 0,
-          "bullets": ["string", "string", "string"]
-        }
-      `;
-
-      const aiResult = await model.generateContent(prompt);
-      const text = aiResult.response.text();
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      
-      if (jsonMatch) {
-         const parsed = JSON.parse(jsonMatch[0]);
-         if (parsed.score !== undefined && Array.isArray(parsed.bullets)) {
-            return res.json(parsed);
-         }
+      Output strictly JSON:
+      {
+        "score": 0,
+        "bullets": ["string", "string", "string"]
       }
-    } catch (aiErr) {
-      console.error('Gemini Match Score Failure:', aiErr);
-    }
+    `;
 
-    res.json({
+    const mockData = {
       score: fallbackScore,
       bullets: [
         `Shared skills: ${Array.from(intersection).slice(0, 3).join(', ') || 'None'}`,
-        `Direct overlap: ${intersection.size} total skills.`,
-        `Skill gap exists in ${targetSet.size} areas.`
+        `Complementary skills: ${Array.from(targetSet).filter(x => !selfSet.has(x)).slice(0, 2).join(', ') || 'None'}`,
+        `Skill gap: Missing specific overlap in ${targetSet.size - intersection.size} fields.`
       ]
-    });
+    };
+
+    const aiResponse = await callGemini(prompt, mockData);
+    if (aiResponse) {
+       return res.json(aiResponse);
+    }
+
+    next(error);
   } catch (error) {
     console.error('Match Score Route Failure:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    next(error);
   }
 });
 

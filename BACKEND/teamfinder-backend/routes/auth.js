@@ -5,10 +5,11 @@ const passport = require('passport');
 const GitHubStrategy = require('passport-github2').Strategy;
 const db = require('../db');
 const { encrypt } = require('../utils/encryption');
+const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-router.post('/register', async (req, res) => {
+router.post('/register', async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
 
@@ -43,11 +44,11 @@ router.post('/register', async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    next(error);
   }
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -85,12 +86,12 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Server error' });
+    next(error);
   }
 });
 
 // GET /api/auth/me - Check current authentication status
-router.get('/me', auth, async (req, res) => {
+router.get('/me', auth, async (req, res, next) => {
   try {
     const result = await db.query(
       'SELECT id, name, email, avatar_url, bio FROM users WHERE id = $1',
@@ -99,12 +100,12 @@ router.get('/me', auth, async (req, res) => {
     if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
     res.json({ success: true, user: result.rows[0] });
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    next(error);
   }
 });
 
 // POST /api/auth/exchange - Exchange temp code for httpOnly token
-router.post('/exchange', async (req, res) => {
+router.post('/exchange', async (req, res, next) => {
   try {
     const { code } = req.body;
     if (!code) return res.status(400).json({ error: 'Code is required' });
@@ -133,7 +134,7 @@ router.post('/exchange', async (req, res) => {
     res.json({ success: true, user: user.rows[0] });
   } catch (error) {
     console.error('Exchange error:', error);
-    res.status(500).json({ error: 'Server error' });
+    next(error);
   }
 });
 
@@ -257,8 +258,8 @@ router.get('/github', (req, res, next) => {
 router.get('/github/callback', 
   (req, res, next) => {
     if (!process.env.FRONTEND_URL) {
-      return res.status(500).json({ error: 'Server configuration error: FRONTEND_URL is not set. Cannot perform OAuth redirect.' });
-    }
+      return next(new Error('FRONTEND_URL not defined'));
+  }
     passport.authenticate('github', { failureRedirect: `${process.env.FRONTEND_URL}/login?error=oauth_failed` })(req, res, next);
   },
   async function(req, res) {
